@@ -8,6 +8,8 @@ import { useYouTubeEmbed } from '../hooks/useYouTubeEmbed';
 import TimerCircle from '../components/TimerCircle';
 import TimerControls from '../components/TimerControls';
 import YouTubeBackground from '../components/YouTubeBackground';
+import RecordList from '../components/RecordList';
+import SettingsForm from '../components/SettingsForm';
 
 const PomodoroPage: React.FC = () => {
   const { 
@@ -33,6 +35,9 @@ const PomodoroPage: React.FC = () => {
   const [totalWork, setTotalWork] = useState(0);
   const [totalBreak, setTotalBreak] = useState(0);
   const [lastTick, setLastTick] = useState<number | null>(null);
+  
+  // Settings sidebar control
+  const [showSettings, setShowSettings] = useState(false);
   
   // Audio for timer start/end
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -137,41 +142,92 @@ const PomodoroPage: React.FC = () => {
   // Determine color class based on mode
   const colorClass = mode === 'work' ? 'text-red-500' : 'text-green-500';
   
+  // Toggle settings sidebar
+  const toggleSettings = () => {
+    setShowSettings(!showSettings);
+  };
+  
   return (
-    <div className="min-h-screen flex items-center justify-center py-20 px-4 bg-gray-900 text-white">
-      <div className="relative w-full max-w-md">
-        {videoId && (
-          <YouTubeBackground
-            videoId={videoId}
-            playing={isRunning}
-          />
-        )}
-        
-        <div className="relative z-20 flex flex-col items-center justify-center glass rounded-xl shadow-2xl py-10 px-6">
-          <h1 className="text-xl font-bold mb-4">
-            {mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'Pomodoro Timer'}
-          </h1>
-          
-          <TimerCircle 
-            total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
-            remaining={remaining}
-            colorClass={colorClass}
-          />
-          
-          <TimerControls 
-            onStart={handleStart}
-            onResume={handleResume}
-          />
-          
-          {mode !== 'stopped' && (
-            <button
-              onClick={handleSwitchMode}
-              className="mt-4 text-sm text-gray-300 hover:text-white"
+    <div className="relative min-h-screen">
+      {/* Settings sidebar */}
+      <div className={`fixed top-0 right-0 h-full w-full md:w-80 bg-gray-800 z-40 transition-transform duration-300 overflow-auto ${showSettings ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">設定</h2>
+            <button 
+              onClick={toggleSettings}
+              className="p-2 rounded-full hover:bg-gray-700"
             >
-              {mode === 'work' ? '休憩モードに切替' : '作業モードに切替'}
+              ✕
             </button>
-          )}
+          </div>
+          <SettingsForm />
         </div>
+      </div>
+      
+      {/* Settings button */}
+      <button 
+        onClick={toggleSettings} 
+        className="fixed top-4 right-4 z-50 bg-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-700"
+      >
+        ⚙️
+      </button>
+      
+      {/* Page content with snap scroll */}
+      <div className="h-screen snap-y snap-mandatory overflow-auto">
+        {/* Timer section */}
+        <section className="snap-start h-screen flex items-center justify-center bg-gray-900 text-white relative">
+          <div className="relative w-full max-w-md px-4">
+            {videoId && (
+              <YouTubeBackground
+                videoId={videoId}
+                playing={isRunning}
+              />
+            )}
+            
+            <div className="relative z-20 flex flex-col items-center justify-center glass rounded-xl shadow-2xl py-10 px-6">
+              <h1 className="text-xl font-bold mb-4">
+                {mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'Pomodoro Timer'}
+              </h1>
+              
+              <TimerCircle 
+                total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
+                remaining={remaining}
+                colorClass={colorClass}
+              />
+              
+              <TimerControls 
+                onStart={handleStart}
+                onResume={handleResume}
+              />
+              
+              {mode !== 'stopped' && (
+                <button
+                  onClick={handleSwitchMode}
+                  className="mt-4 text-sm text-gray-300 hover:text-white"
+                >
+                  {mode === 'work' ? '休憩モードに切替' : '作業モードに切替'}
+                </button>
+              )}
+            </div>
+            
+            {/* Scroll indicator */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-gray-400">
+              <span className="mb-2">記録を表示</span>
+              <svg className="animate-bounce w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
+          </div>
+        </section>
+        
+        {/* Record section */}
+        <section className="snap-start min-h-screen flex flex-col items-center bg-gray-900 text-white py-16 px-4">
+          <div className="w-full max-w-4xl">
+            <h2 className="text-2xl font-bold mb-8 text-center">ポモドーロ記録</h2>
+            <RecordList />
+          </div>
+        </section>
       </div>
     </div>
   );
