@@ -1,3 +1,10 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@layer components {
+    .glass {
+        @apply bg-black/30;
+        backdrop-filter: blur(2px);
+    }
+}
