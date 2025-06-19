@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// Simple UUID generation function
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
 export interface PomodoroRecord {
   id: string;
   startAt: string;
@@ -25,7 +30,7 @@ export const useRecordStore = create<RecordState>()(
         set((s) => ({
           records: [
             ...s.records,
-            { id: crypto.randomUUID(), ...rec },
+            { id: generateId(), ...rec },
           ],
         })),
       updateNote: (id, note) =>
