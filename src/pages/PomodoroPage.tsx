@@ -57,6 +57,12 @@ const PomodoroPage: React.FC = () => {
   // Get video ID based on current mode
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
   const { videoId } = useYouTubeEmbed(currentUrl);
+
+  // chime.wavのURLを、場合に応じて変更する
+  // 開発中は、/src/assets/chime.wav を使用する
+  // https://xxx.github.ioの場合、/assets/chime.wav を使用する
+  const isGitHubPages = window.location.hostname.includes('github.io');
+  const chimeUrl = isGitHubPages ? '/assets/chime.wav' : '/src/assets/chime.wav';
   
   // Function to save current video progress
   const saveVideoProgress = useCallback(() => {
@@ -102,7 +108,7 @@ const PomodoroPage: React.FC = () => {
   // Handle 3-second warning chime
   useEffect(() => {
     if (remaining === 3 && isRunning && !hasPlayedWarningChime) {
-      const audio = new Audio('/src/assets/chime.wav');
+      const audio = new Audio(chimeUrl);
       audio.play();
       setHasPlayedWarningChime(true);
     }
@@ -152,7 +158,7 @@ const PomodoroPage: React.FC = () => {
     
     // Play start sound
     if (!audioRef.current) {
-      audioRef.current = new Audio('/src/assets/chime.wav');
+      audioRef.current = new Audio(chimeUrl);
     } else {
       audioRef.current.currentTime = 0;
     }
