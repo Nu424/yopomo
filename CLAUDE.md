@@ -15,6 +15,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` - Run ESLint
 - `npm run preview` - Preview production build
 
+## Development Notes
+- npm run devによる開発サーバーは別Shellですでに起動していますので、特段起動しなくてOKです。
+
 ## Architecture
 
 ### State Management
@@ -50,3 +53,12 @@ The app uses Zustand for state management with three main stores:
 - `/src/pages/` - Main page component
 - `/src/hooks/` - Custom React hooks for YouTube and intervals
 - `/src/assets/` - Static assets (audio files)
+
+### Implementation Details
+- No routing system - single page application using only `PomodoroPage.tsx`
+- Audio file path is `/src/assets/chime.wav` (referenced from public directory)
+- Glass effect styling achieved with `backdrop-filter: blur(10px)` and semi-transparent backgrounds
+- Snap scroll implemented with CSS: `snap-y snap-mandatory` on container, `snap-start` on sections
+- Settings sidebar slides in from right side as overlay with z-index management
+- Timer auto-switches between work/break modes with audio notifications
+- Session tracking accumulates time spent in each mode for final recording

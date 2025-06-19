@@ -36,6 +36,9 @@ const PomodoroPage: React.FC = () => {
   const [totalBreak, setTotalBreak] = useState(0);
   const [lastTick, setLastTick] = useState<number | null>(null);
   
+  // Chime management
+  const [hasPlayedWarningChime, setHasPlayedWarningChime] = useState(false);
+  
   // Settings sidebar control
   const [showSettings, setShowSettings] = useState(false);
   
@@ -65,14 +68,19 @@ const PomodoroPage: React.FC = () => {
     isRunning ? 1000 : null
   );
   
+  // Handle 3-second warning chime
+  useEffect(() => {
+    if (remaining === 3 && isRunning && !hasPlayedWarningChime) {
+      const audio = new Audio('/src/assets/chime.wav');
+      audio.play();
+      setHasPlayedWarningChime(true);
+    }
+  }, [remaining, isRunning, hasPlayedWarningChime]);
+  
   // Handle timer completion and auto-switch between work/break
   useEffect(() => {
     if (remaining === 0 && isRunning) {
-      // Play end sound
-      const audio = new Audio('/src/assets/chime.wav');
-      audio.play();
-      
-      // Auto-switch to next phase
+      // Auto-switch to next phase (no chime)
       if (mode === 'work') {
         // Work finished -> Start break
         start('break', breakDuration * 60, true);
@@ -81,6 +89,8 @@ const PomodoroPage: React.FC = () => {
         start('work', workDuration * 60, true);
       }
       
+      // Reset warning chime flag for next cycle
+      setHasPlayedWarningChime(false);
       setLastTick(Date.now());
     }
   }, [remaining, isRunning, mode, workDuration, breakDuration]);
@@ -106,20 +116,10 @@ const PomodoroPage: React.FC = () => {
     };
   };
   
-  // Handle resuming from pause
+  // Handle resuming from pause (no chime)
   const handleResume = () => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio('/src/assets/chime.wav');
-    } else {
-      audioRef.current.currentTime = 0;
-    }
-    
-    audioRef.current.play();
-    // When sound finishes, resume the timer
-    audioRef.current.onended = () => {
-      useTimerStore.getState().resume();
-      setLastTick(Date.now());
-    };
+    useTimerStore.getState().resume();
+    setLastTick(Date.now());
   };
   
   // Handle manual stop with session recording
@@ -151,6 +151,8 @@ const PomodoroPage: React.FC = () => {
     } else {
       start('work', workDuration * 60, true);
     }
+    // Reset warning chime flag for new mode
+    setHasPlayedWarningChime(false);
     setLastTick(Date.now());
   };
   
