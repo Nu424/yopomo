@@ -37,6 +37,7 @@ The app uses Zustand for state management with three main stores:
 - Timer modes: work/break/stopped with audio chimes (`/src/assets/chime.wav`)
 - YouTube integration via iframe embed (uses `useYouTubeEmbed` hook)
 - Session tracking with work/break time totals
+- CSV export functionality for session records
 - Persistent settings and history via Zustand persist middleware
 - Single-page design with snap-scroll between timer and history sections
 
@@ -52,6 +53,7 @@ The app uses Zustand for state management with three main stores:
 - `/src/components/` - Reusable UI components  
 - `/src/pages/` - Main page component
 - `/src/hooks/` - Custom React hooks for YouTube and intervals
+- `/src/utils/` - Utility functions (CSV export, etc.)
 - `/src/assets/` - Static assets (audio files)
 
 ### Implementation Details
@@ -62,3 +64,4 @@ The app uses Zustand for state management with three main stores:
 - Settings sidebar slides in from right side as overlay with z-index management
 - Timer auto-switches between work/break modes with audio notifications
 - Session tracking accumulates time spent in each mode for final recording
+- CSV export uses browser download API with UTF-8 BOM for Excel compatibility

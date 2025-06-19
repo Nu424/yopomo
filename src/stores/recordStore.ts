@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { recordsToCsv, downloadCsv, generateCsvFilename } from '../utils/csvExport';
 
 // Simple UUID generation function
 function generateId(): string {
@@ -20,11 +21,12 @@ interface RecordState {
   addRecord: (rec: Omit<PomodoroRecord,'id'>) => void;
   updateNote: (id: string, note: string) => void;
   clearAll: () => void;
+  exportToCsv: () => void;
 }
 
 export const useRecordStore = create<RecordState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       records: [],
       addRecord: (rec) =>
         set((s) => ({
@@ -40,6 +42,17 @@ export const useRecordStore = create<RecordState>()(
           ),
         })),
       clearAll: () => set({ records: [] }),
+      exportToCsv: () => {
+        const { records } = get();
+        if (records.length === 0) {
+          alert('出力する記録がありません。');
+          return;
+        }
+        
+        const csvContent = recordsToCsv(records);
+        const filename = generateCsvFilename();
+        downloadCsv(csvContent, filename);
+      },
     }),
     { name: 'pomodoro-records' }
   )

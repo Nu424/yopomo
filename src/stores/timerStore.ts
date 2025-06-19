@@ -19,7 +19,7 @@ export const useTimerStore = create<TimerState>((set) => ({
   isRunning: false,
   start: (mode, seconds, autoStart = false) => set({ mode, remaining: seconds, isRunning: autoStart }),
   pause: () => set({ isRunning: false }),
-  resume: () => set((s) => ({ isRunning: true })),
+  resume: () => set(() => ({ isRunning: true })),
   stop: () => set({ mode: 'stopped', remaining: 0, isRunning: false }),
   tick: () => set((s) => ({ remaining: Math.max(0, s.remaining - 1) })),
 })); 

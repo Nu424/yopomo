@@ -3,7 +3,7 @@ import { useRecordStore } from '../stores/recordStore';
 import type { PomodoroRecord } from '../stores/recordStore';
 
 const RecordList: React.FC = () => {
-  const { records, updateNote, clearAll } = useRecordStore();
+  const { records, updateNote, clearAll, exportToCsv } = useRecordStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNote, setEditNote] = useState<string>('');
 
@@ -41,7 +41,13 @@ const RecordList: React.FC = () => {
         <p className="text-center text-gray-500 my-8">記録がありません</p>
       ) : (
         <>
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex justify-end space-x-2">
+            <button 
+              onClick={exportToCsv}
+              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+            >
+              📊 CSV出力
+            </button>
             <button 
               onClick={() => {
                 if (confirm('すべての記録を削除しますか？')) {

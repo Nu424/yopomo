@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
-import type { TimerMode } from '../stores/timerStore';
 import { useRecordStore } from '../stores/recordStore';
 import { useInterval } from '../hooks/useInterval';
 import { useYouTubeEmbed } from '../hooks/useYouTubeEmbed';
