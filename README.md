@@ -1,54 +1,48 @@
-# React + TypeScript + Vite
+# よぽも 🍅
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ポモドーロテクニックで集中するやつ。YouTubeの音楽も流せるよ〜
 
-Currently, two official plugins are available:
+## これなに？
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+まあ、要するにタイマーアプリかな。25分作業して5分休憩する、あのやつ。
+YouTubeの好きな動画をBGMにできるから、集中しやすいかも？
 
-## Expanding the ESLint configuration
+## 機能っぽいもの
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 🍅 ポモドーロタイマー（当たり前）
+- 🎵 YouTube動画をBGMにできる
+- 📊 作業時間の記録・履歴
+- ⚙️ 設定の保存（作業時間とか休憩時間とか）
+- 📁 履歴のCSVエクスポート
+- 🔔 時間が来たらチャイムでお知らせ
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 使い方
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+あとはブラウザで開いて適当にポチポチすればわかるよ〜
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 技術的なやつ
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+- React 19 + TypeScript
+- Tailwind CSS（v4）
+- Zustand（状態管理）
+- Vite（ビルドツール）
+
+まあ、普通のモダンなやつですね。
+
+## 開発コマンド
+
+```bash
+npm run dev      # 開発サーバー起動
+npm run build    # プロダクションビルド
+npm run lint     # コードチェック
+npm run preview  # ビルド結果のプレビュー
 ```
+
+## ライセンス
+
+適当に使ってね〜
