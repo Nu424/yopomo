@@ -62,7 +62,7 @@ const PomodoroPage: React.FC = () => {
   // 開発中は、/src/assets/chime.wav を使用する
   // https://xxx.github.ioの場合、/assets/chime.wav を使用する
   const isGitHubPages = window.location.hostname.includes('github.io');
-  const chimeUrl = isGitHubPages ? '/assets/chime.wav' : '/src/assets/chime.wav';
+  const chimeUrl = isGitHubPages ? '/yopomo/assets/chime.wav' : '/src/assets/chime.wav';
   
   // Function to save current video progress
   const saveVideoProgress = useCallback(() => {
