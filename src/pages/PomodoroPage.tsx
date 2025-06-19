@@ -45,6 +45,9 @@ const PomodoroPage: React.FC = () => {
   // Settings sidebar control
   const [showSettings, setShowSettings] = useState(false);
   
+  // Error message state
+  const [errorMessage, setErrorMessage] = useState('');
+  
   // Audio for timer start/end
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -137,6 +140,13 @@ const PomodoroPage: React.FC = () => {
   
   // Handle starting timer
   const handleStart = () => {
+    // Check if YouTube URL is set
+    if (!workUrl.trim()) {
+      setErrorMessage('作業用のYouTube動画URLを設定してください');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+    
     // Start with work mode
     start('work', workDuration * 60);
     
@@ -281,6 +291,12 @@ const PomodoroPage: React.FC = () => {
                 onResume={handleResume}
                 onStop={handleStop}
               />
+              
+              {errorMessage && (
+                <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm text-center backdrop-blur-sm">
+                  {errorMessage}
+                </div>
+              )}
               
               {mode !== 'stopped' && (
                 <button
