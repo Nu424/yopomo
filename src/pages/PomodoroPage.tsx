@@ -65,33 +65,25 @@ const PomodoroPage: React.FC = () => {
     isRunning ? 1000 : null
   );
   
-  // Handle timer completion
+  // Handle timer completion and auto-switch between work/break
   useEffect(() => {
     if (remaining === 0 && isRunning) {
       // Play end sound
       const audio = new Audio('/src/assets/chime.wav');
       audio.play();
       
-      // Stop timer
-      stop();
-      
-      // If in a session, record it
-      if (sessionStart) {
-        const now = new Date();
-        addRecord({
-          startAt: sessionStart.toISOString(),
-          endAt: now.toISOString(),
-          totalWork: Math.round(totalWork),
-          totalBreak: Math.round(totalBreak),
-        });
-        
-        // Reset session tracking
-        setSessionStart(null);
-        setTotalWork(0);
-        setTotalBreak(0);
+      // Auto-switch to next phase
+      if (mode === 'work') {
+        // Work finished -> Start break
+        start('break', breakDuration * 60, true);
+      } else if (mode === 'break') {
+        // Break finished -> Start work
+        start('work', workDuration * 60, true);
       }
+      
+      setLastTick(Date.now());
     }
-  }, [remaining, isRunning]);
+  }, [remaining, isRunning, mode, workDuration, breakDuration]);
   
   // Handle starting timer
   const handleStart = () => {
@@ -130,13 +122,36 @@ const PomodoroPage: React.FC = () => {
     };
   };
   
+  // Handle manual stop with session recording
+  const handleStop = () => {
+    // Record session if one is active
+    if (sessionStart) {
+      const now = new Date();
+      addRecord({
+        startAt: sessionStart.toISOString(),
+        endAt: now.toISOString(),
+        totalWork: Math.round(totalWork),
+        totalBreak: Math.round(totalBreak),
+      });
+      
+      // Reset session tracking
+      setSessionStart(null);
+      setTotalWork(0);
+      setTotalBreak(0);
+    }
+    
+    // Stop the timer
+    stop();
+  };
+  
   // Switch between work/break modes
   const handleSwitchMode = () => {
     if (mode === 'work') {
-      start('break', breakDuration * 60);
+      start('break', breakDuration * 60, true);
     } else {
-      start('work', workDuration * 60);
+      start('work', workDuration * 60, true);
     }
+    setLastTick(Date.now());
   };
   
   // Determine color class based on mode
@@ -199,6 +214,7 @@ const PomodoroPage: React.FC = () => {
               <TimerControls 
                 onStart={handleStart}
                 onResume={handleResume}
+                onStop={handleStop}
               />
               
               {mode !== 'stopped' && (

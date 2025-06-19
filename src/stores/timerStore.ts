@@ -6,7 +6,7 @@ interface TimerState {
   mode: TimerMode;
   remaining: number; // 秒
   isRunning: boolean;
-  start: (mode: TimerMode, seconds: number) => void;
+  start: (mode: TimerMode, seconds: number, autoStart?: boolean) => void;
   pause: () => void;
   resume: () => void;
   stop: () => void;
@@ -17,7 +17,7 @@ export const useTimerStore = create<TimerState>((set) => ({
   mode: 'stopped',
   remaining: 0,
   isRunning: false,
-  start: (mode, seconds) => set({ mode, remaining: seconds, isRunning: false }),
+  start: (mode, seconds, autoStart = false) => set({ mode, remaining: seconds, isRunning: autoStart }),
   pause: () => set({ isRunning: false }),
   resume: () => set((s) => ({ isRunning: true })),
   stop: () => set({ mode: 'stopped', remaining: 0, isRunning: false }),

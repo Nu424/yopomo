@@ -4,10 +4,11 @@ import { useTimerStore } from '../stores/timerStore';
 interface TimerControlsProps {
   onStart: () => void;
   onResume: () => void;
+  onStop: () => void;
 }
 
-const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onResume }) => {
-  const { isRunning, mode, pause, stop } = useTimerStore();
+const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onResume, onStop }) => {
+  const { isRunning, mode, pause } = useTimerStore();
 
   return (
     <div className="flex justify-center space-x-4 mt-8">
@@ -27,7 +28,7 @@ const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onResume }) => {
             一時停止 ⏸
           </button>
           <button
-            onClick={stop}
+            onClick={onStop}
             className="px-6 py-3 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 active:bg-gray-700 transition"
           >
             終了 ■
@@ -42,7 +43,7 @@ const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onResume }) => {
             再開 ▶
           </button>
           <button
-            onClick={stop}
+            onClick={onStop}
             className="px-6 py-3 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 active:bg-gray-700 transition"
           >
             終了 ■

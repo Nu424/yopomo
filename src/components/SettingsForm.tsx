@@ -146,10 +146,11 @@ const SettingsForm: React.FC = () => {
             <input
               id="workDuration"
               type="number"
-              min="1"
+              min="0.1"
               max="60"
+              step="0.1"
               value={workDuration}
-              onChange={(e) => setWorkDuration(Math.max(1, Math.min(60, parseInt(e.target.value) || 1)))}
+              onChange={(e) => setWorkDuration(Math.max(0.1, Math.min(60, parseFloat(e.target.value) || 0.1)))}
               className="w-full py-2 px-3 bg-gray-700 rounded-md text-white border border-gray-600"
             />
           </div>
@@ -161,10 +162,11 @@ const SettingsForm: React.FC = () => {
             <input
               id="breakDuration"
               type="number"
-              min="1"
+              min="0.1"
               max="30"
+              step="0.1"
               value={breakDuration}
-              onChange={(e) => setBreakDuration(Math.max(1, Math.min(30, parseInt(e.target.value) || 1)))}
+              onChange={(e) => setBreakDuration(Math.max(0.1, Math.min(30, parseFloat(e.target.value) || 0.1)))}
               className="w-full py-2 px-3 bg-gray-700 rounded-md text-white border border-gray-600"
             />
           </div>
