@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useRecordStore } from '../stores/recordStore';
@@ -6,7 +6,7 @@ import { useInterval } from '../hooks/useInterval';
 import { useYouTubeEmbed } from '../hooks/useYouTubeEmbed';
 import TimerCircle from '../components/TimerCircle';
 import TimerControls from '../components/TimerControls';
-import YouTubeBackground from '../components/YouTubeBackground';
+import YouTubeBackground, { type YouTubePlayerRef } from '../components/YouTubeBackground';
 import RecordList from '../components/RecordList';
 import SettingsForm from '../components/SettingsForm';
 
@@ -15,7 +15,11 @@ const PomodoroPage: React.FC = () => {
     workUrl, 
     breakUrl, 
     workDuration, 
-    breakDuration 
+    breakDuration,
+    workVideoProgress,
+    breakVideoProgress,
+    setWorkVideoProgress,
+    setBreakVideoProgress
   } = useSettingsStore();
   
   const { 
@@ -44,9 +48,34 @@ const PomodoroPage: React.FC = () => {
   // Audio for timer start/end
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
+  // YouTube player ref for controlling video
+  const youtubePlayerRef = useRef<YouTubePlayerRef>(null);
+  
   // Get video ID based on current mode
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
   const { videoId } = useYouTubeEmbed(currentUrl);
+  
+  // Function to save current video progress
+  const saveVideoProgress = useCallback(() => {
+    if (youtubePlayerRef.current && mode !== 'stopped') {
+      const currentTime = youtubePlayerRef.current.getCurrentTime();
+      if (mode === 'work') {
+        setWorkVideoProgress(currentTime);
+      } else if (mode === 'break') {
+        setBreakVideoProgress(currentTime);
+      }
+    }
+  }, [mode, setWorkVideoProgress, setBreakVideoProgress]);
+  
+  // Get start time for current mode
+  const getStartTime = () => {
+    if (mode === 'work') {
+      return workVideoProgress;
+    } else if (mode === 'break') {
+      return breakVideoProgress;
+    }
+    return 0;
+  };
   
   // Setup the interval for timer ticking
   useInterval(
@@ -79,6 +108,9 @@ const PomodoroPage: React.FC = () => {
   // Handle timer completion and auto-switch between work/break
   useEffect(() => {
     if (remaining === 0 && isRunning) {
+      // Save current video progress before switching modes
+      saveVideoProgress();
+      
       // Auto-switch to next phase (no chime)
       if (mode === 'work') {
         // Work finished -> Start break
@@ -92,7 +124,16 @@ const PomodoroPage: React.FC = () => {
       setHasPlayedWarningChime(false);
       setLastTick(Date.now());
     }
-  }, [remaining, isRunning, mode, workDuration, breakDuration]);
+  }, [remaining, isRunning, mode, workDuration, breakDuration, saveVideoProgress, start]);
+
+  // Reset video progress when URL changes
+  useEffect(() => {
+    setWorkVideoProgress(0);
+  }, [workUrl, setWorkVideoProgress]);
+  
+  useEffect(() => {
+    setBreakVideoProgress(0);
+  }, [breakUrl, setBreakVideoProgress]);
   
   // Handle starting timer
   const handleStart = () => {
@@ -115,10 +156,23 @@ const PomodoroPage: React.FC = () => {
     };
   };
   
+  // Handle pausing timer
+  const handlePause = () => {
+    // Save current video progress before pausing
+    saveVideoProgress();
+    useTimerStore.getState().pause();
+  };
+
   // Handle resuming from pause (no chime)
   const handleResume = () => {
     useTimerStore.getState().resume();
     setLastTick(Date.now());
+    
+    // Seek to saved position when resuming
+    if (youtubePlayerRef.current) {
+      const startTime = getStartTime();
+      youtubePlayerRef.current.seekTo(startTime);
+    }
   };
   
   // Handle manual stop with session recording
@@ -139,12 +193,19 @@ const PomodoroPage: React.FC = () => {
       setTotalBreak(0);
     }
     
+    // Reset video progress for both modes
+    setWorkVideoProgress(0);
+    setBreakVideoProgress(0);
+    
     // Stop the timer
     stop();
   };
   
   // Switch between work/break modes
   const handleSwitchMode = () => {
+    // Save current video progress before switching modes
+    saveVideoProgress();
+    
     if (mode === 'work') {
       start('break', breakDuration * 60, true);
     } else {
@@ -196,8 +257,10 @@ const PomodoroPage: React.FC = () => {
           <div className="relative w-full max-w-md px-4">
             {videoId && (
               <YouTubeBackground
+                ref={youtubePlayerRef}
                 videoId={videoId}
                 playing={isRunning}
+                startTime={getStartTime()}
               />
             )}
             
@@ -214,6 +277,7 @@ const PomodoroPage: React.FC = () => {
               
               <TimerControls 
                 onStart={handleStart}
+                onPause={handlePause}
                 onResume={handleResume}
                 onStop={handleStop}
               />

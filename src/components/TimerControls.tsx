@@ -3,12 +3,13 @@ import { useTimerStore } from '../stores/timerStore';
 
 interface TimerControlsProps {
   onStart: () => void;
+  onPause: () => void;
   onResume: () => void;
   onStop: () => void;
 }
 
-const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onResume, onStop }) => {
-  const { isRunning, mode, pause } = useTimerStore();
+const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onPause, onResume, onStop }) => {
+  const { isRunning, mode } = useTimerStore();
 
   return (
     <div className="flex justify-center space-x-4 mt-8">
@@ -22,7 +23,7 @@ const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onResume, onStop
       ) : isRunning ? (
         <>
           <button
-            onClick={pause}
+            onClick={onPause}
             className="px-6 py-3 bg-yellow-500 text-white rounded-lg shadow-lg hover:bg-yellow-600 active:bg-yellow-700 transition"
           >
             一時停止 ⏸
