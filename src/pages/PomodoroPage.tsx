@@ -28,7 +28,8 @@ const PomodoroPage: React.FC = () => {
     isRunning, 
     start, 
     tick,
-    stop
+    stop,
+    setChimePlaying
   } = useTimerStore();
   
   const { addRecord } = useRecordStore();
@@ -51,8 +52,29 @@ const PomodoroPage: React.FC = () => {
   // Audio for timer start/end
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
+  // Audio for warning chime (3 seconds before end)
+  const warningAudioRef = useRef<HTMLAudioElement | null>(null);
+  
   // YouTube player ref for controlling video
   const youtubePlayerRef = useRef<YouTubePlayerRef>(null);
+  
+  // Helper function to stop chime audio completely
+  const stopChimeAudio = useCallback(() => {
+    // Stop start chime
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.onended = null;
+    }
+    
+    // Stop warning chime
+    if (warningAudioRef.current) {
+      warningAudioRef.current.pause();
+      warningAudioRef.current.currentTime = 0;
+    }
+    
+    setChimePlaying(false);
+  }, [setChimePlaying]);
   
   // Get video ID based on current mode
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
@@ -108,11 +130,18 @@ const PomodoroPage: React.FC = () => {
   // Handle 3-second warning chime
   useEffect(() => {
     if (remaining === 3 && isRunning && !hasPlayedWarningChime) {
-      const audio = new Audio(chimeUrl);
-      audio.play();
-      setHasPlayedWarningChime(true);
+      const { isChimePlaying } = useTimerStore.getState();
+      if (!isChimePlaying) {
+        if (!warningAudioRef.current) {
+          warningAudioRef.current = new Audio(chimeUrl);
+        } else {
+          warningAudioRef.current.currentTime = 0;
+        }
+        warningAudioRef.current.play();
+        setHasPlayedWarningChime(true);
+      }
     }
-  }, [remaining, isRunning, hasPlayedWarningChime]);
+  }, [remaining, isRunning, hasPlayedWarningChime, chimeUrl]);
   
   // Handle timer completion and auto-switch between work/break
   useEffect(() => {
@@ -144,6 +173,13 @@ const PomodoroPage: React.FC = () => {
     setBreakVideoProgress(0);
   }, [breakUrl, setBreakVideoProgress]);
   
+  // Cleanup chime audio on unmount
+  useEffect(() => {
+    return () => {
+      stopChimeAudio();
+    };
+  }, [stopChimeAudio]);
+  
   // Handle starting timer
   const handleStart = () => {
     // Check if YouTube URL is set
@@ -156,6 +192,9 @@ const PomodoroPage: React.FC = () => {
     // Start with work mode
     start('work', workDuration * 60);
     
+    // Set chime playing state
+    setChimePlaying(true);
+    
     // Play start sound
     if (!audioRef.current) {
       audioRef.current = new Audio(chimeUrl);
@@ -166,6 +205,7 @@ const PomodoroPage: React.FC = () => {
     audioRef.current.play();
     // When sound finishes, start the actual timer
     audioRef.current.onended = () => {
+      setChimePlaying(false);
       useTimerStore.getState().resume();
       setSessionStart(new Date());
       setLastTick(Date.now());
@@ -174,6 +214,9 @@ const PomodoroPage: React.FC = () => {
   
   // Handle pausing timer
   const handlePause = () => {
+    // Stop chime audio if playing
+    stopChimeAudio();
+    
     // Save current video progress before pausing
     saveVideoProgress();
     useTimerStore.getState().pause();
@@ -193,6 +236,9 @@ const PomodoroPage: React.FC = () => {
   
   // Handle manual stop with session recording
   const handleStop = () => {
+    // Stop chime audio immediately
+    stopChimeAudio();
+    
     // Record session if one is active
     if (sessionStart) {
       const now = new Date();

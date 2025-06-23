@@ -9,7 +9,7 @@ interface TimerControlsProps {
 }
 
 const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onPause, onResume, onStop }) => {
-  const { isRunning, mode } = useTimerStore();
+  const { isRunning, mode, isChimePlaying } = useTimerStore();
 
   return (
     <div className="flex justify-center space-x-4 mt-8">
@@ -28,6 +28,18 @@ const TimerControls: React.FC<TimerControlsProps> = ({ onStart, onPause, onResum
           >
             一時停止 ⏸
           </button>
+          <button
+            onClick={onStop}
+            className="px-6 py-3 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 active:bg-gray-700 transition"
+          >
+            終了 ■
+          </button>
+        </>
+      ) : isChimePlaying ? (
+        <>
+          <div className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg opacity-70">
+            準備中... ♪
+          </div>
           <button
             onClick={onStop}
             className="px-6 py-3 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 active:bg-gray-700 transition"
