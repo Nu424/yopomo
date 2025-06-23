@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### State Management
 The app uses Zustand for state management with three main stores:
 
-- `timerStore.ts` - Timer state (mode, remaining time, isRunning)
+- `timerStore.ts` - Timer state (mode, remaining time, isRunning, isChimePlaying)
 - `settingsStore.ts` - User preferences (YouTube URLs, durations) - persisted to localStorage
 - `recordStore.ts` - Session history tracking - persisted to localStorage
 
@@ -65,3 +65,10 @@ The app uses Zustand for state management with three main stores:
 - Timer auto-switches between work/break modes with audio notifications
 - Session tracking accumulates time spent in each mode for final recording
 - CSV export uses browser download API with UTF-8 BOM for Excel compatibility
+
+### Audio Management
+- Two separate audio elements: `audioRef` for start chime, `warningAudioRef` for 3-second warning
+- `isChimePlaying` state prevents button interactions during chime playback
+- Chime playback during timer start shows "準備中... ♪" instead of resume button
+- `stopChimeAudio()` helper function ensures complete audio cleanup on stop/pause
+- Warning chime (3 seconds before end) can be interrupted by stop button

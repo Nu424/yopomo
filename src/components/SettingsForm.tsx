@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useYouTubeEmbed } from '../hooks/useYouTubeEmbed';
+import { usePictureInPicture } from '../hooks/usePictureInPicture';
 
 const SettingsForm: React.FC = () => {
   const {
@@ -22,6 +23,9 @@ const SettingsForm: React.FC = () => {
   const workYouTube = useYouTubeEmbed(tempWorkUrl);
   const breakYouTube = useYouTubeEmbed(tempBreakUrl);
 
+  // Picture-in-Picture functionality
+  const { isSupported: pipSupported, isOpen: pipOpen, error: pipError, openPiP, closePiP } = usePictureInPicture();
+
   const handleSaveWorkUrl = () => {
     setWorkUrl(tempWorkUrl);
     setShowWorkPreview(false);
@@ -30,6 +34,14 @@ const SettingsForm: React.FC = () => {
   const handleSaveBreakUrl = () => {
     setBreakUrl(tempBreakUrl);
     setShowBreakPreview(false);
+  };
+
+  const handleTogglePiP = async () => {
+    if (pipOpen) {
+      closePiP();
+    } else {
+      await openPiP();
+    }
   };
 
   return (
@@ -172,6 +184,49 @@ const SettingsForm: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Picture-in-Picture設定 */}
+      <div className="pt-4 border-t border-gray-700">
+        <h2 className="text-lg font-medium mb-3">Picture-in-Picture</h2>
+        
+        {!pipSupported ? (
+          <div className="text-yellow-400 p-3 bg-yellow-900 bg-opacity-25 rounded-md mb-4">
+            お使いのブラウザはPicture-in-Picture機能をサポートしていません。
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-300">
+                  タイマーを小さなウィンドウで表示できます
+                </p>
+                {pipOpen && (
+                  <p className="text-xs text-green-400 mt-1">
+                    Picture-in-Pictureウィンドウが開いています
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={handleTogglePiP}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  pipOpen
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                {pipOpen ? 'PinPを閉じる' : 'PinPで表示'}
+              </button>
+            </div>
+
+            {pipError && (
+              <div className="text-red-400 p-3 bg-red-900 bg-opacity-25 rounded-md text-sm">
+                エラー: {pipError}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 };
