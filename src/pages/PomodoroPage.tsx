@@ -3,7 +3,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useRecordStore } from '../stores/recordStore';
 import { useInterval } from '../hooks/useInterval';
-import { useYouTubeEmbed } from '../hooks/useYouTubeEmbed';
+import { useYouTubeEmbed } from '../utils/youtube';
 import TimerCircle from '../components/TimerCircle';
 import TimerControls from '../components/TimerControls';
 import YouTubeBackground, { type YouTubePlayerRef } from '../components/YouTubeBackground';

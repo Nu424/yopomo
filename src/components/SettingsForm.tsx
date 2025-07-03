@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useYouTubeEmbed } from '../hooks/useYouTubeEmbed';
+import { useYouTubeEmbed } from '../utils/youtube';
 import { usePictureInPicture } from '../hooks/usePictureInPicture';
 
 const SettingsForm: React.FC = () => {
