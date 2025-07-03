@@ -1,7 +1,7 @@
 import React from 'react';
 import YouTubeEmbed from './YouTubeEmbed';
 
-interface TimerState {
+export interface PiPTimerState {
   mode: 'work' | 'break' | 'stopped';
   remaining: number;
   isChimePlaying: boolean;
@@ -12,7 +12,7 @@ interface TimerState {
 }
 
 interface PiPTimerProps {
-  timerState: TimerState;
+  timerState: PiPTimerState;
 }
 
 const PiPTimer: React.FC<PiPTimerProps> = ({ timerState }) => {
@@ -24,7 +24,7 @@ const PiPTimer: React.FC<PiPTimerProps> = ({ timerState }) => {
   // Calculate total duration based on current mode
   const total = mode === 'work' ? workDuration * 60 : breakDuration * 60;
   
-  // Circle configuration for smaller PiP display
+  // Circle configuration for PiP display
   const radius = 60;
   const strokeWidth = 8;
   const normalizedRadius = radius - strokeWidth / 2;

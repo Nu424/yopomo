@@ -1,14 +1,17 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useRecordStore } from '../stores/recordStore';
 import { useInterval } from '../hooks/useInterval';
 import { useYouTubeEmbed } from '../utils/youtube';
+import { usePictureInPicture } from '../hooks/usePictureInPicture';
 import TimerCircle from '../components/TimerCircle';
 import TimerControls from '../components/TimerControls';
 import YouTubeBackground, { type YouTubePlayerRef } from '../components/YouTubeBackground';
 import RecordList from '../components/RecordList';
 import SettingsForm from '../components/SettingsForm';
+import PiPTimer, { type PiPTimerState } from '../components/PiPTimer';
 
 const PomodoroPage: React.FC = () => {
   const { 
@@ -33,6 +36,9 @@ const PomodoroPage: React.FC = () => {
   } = useTimerStore();
   
   const { addRecord } = useRecordStore();
+  
+  // Picture-in-Picture
+  const { isSupported: pipSupported, isOpen: pipOpen, error: pipError, pipWindow, openPiP, closePiP } = usePictureInPicture();
   
   // Timer session tracking
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
@@ -79,6 +85,17 @@ const PomodoroPage: React.FC = () => {
   // Get video ID based on current mode
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
   const { videoId } = useYouTubeEmbed(currentUrl);
+  
+  // Create combined state for PiP timer
+  const pipTimerState: PiPTimerState = useMemo(() => ({
+    mode,
+    remaining,
+    isChimePlaying: useTimerStore.getState().isChimePlaying,
+    workDuration,
+    breakDuration,
+    workUrl,
+    breakUrl,
+  }), [mode, remaining, workDuration, breakDuration, workUrl, breakUrl]);
 
   // chime.wavのURLを、場合に応じて変更する
   // 開発中は、/src/assets/chime.wav を使用する
@@ -312,6 +329,23 @@ const PomodoroPage: React.FC = () => {
         ⚙️
       </button>
       
+      {/* PiP button */}
+      {pipSupported && (
+        <button 
+          onClick={pipOpen ? closePiP : () => openPiP()}
+          className="fixed top-4 right-20 z-50 bg-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-700"
+        >
+          {pipOpen ? '🔗' : '📱'}
+        </button>
+      )}
+      
+      {/* PiP error message */}
+      {pipError && (
+        <div className="fixed top-20 right-4 z-50 bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm backdrop-blur-sm">
+          {pipError}
+        </div>
+      )}
+      
       {/* Page content with snap scroll */}
       <div className="h-screen snap-y snap-mandatory overflow-auto">
         {/* Timer section */}
@@ -378,6 +412,12 @@ const PomodoroPage: React.FC = () => {
           </div>
         </section>
       </div>
+      
+      {/* PiP Portal */}
+      {pipWindow && createPortal(
+        <PiPTimer timerState={pipTimerState} />,
+        pipWindow.document.body
+      )}
     </div>
   );
 };

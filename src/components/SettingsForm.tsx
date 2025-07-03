@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useYouTubeEmbed } from '../utils/youtube';
-import { usePictureInPicture } from '../hooks/usePictureInPicture';
 
 const SettingsForm: React.FC = () => {
   const {
@@ -23,9 +22,6 @@ const SettingsForm: React.FC = () => {
   const workYouTube = useYouTubeEmbed(tempWorkUrl);
   const breakYouTube = useYouTubeEmbed(tempBreakUrl);
 
-  // Picture-in-Picture functionality
-  const { isSupported: pipSupported, isOpen: pipOpen, error: pipError, openPiP, closePiP } = usePictureInPicture();
-
   const handleSaveWorkUrl = () => {
     setWorkUrl(tempWorkUrl);
     setShowWorkPreview(false);
@@ -36,18 +32,10 @@ const SettingsForm: React.FC = () => {
     setShowBreakPreview(false);
   };
 
-  const handleTogglePiP = async () => {
-    if (pipOpen) {
-      closePiP();
-    } else {
-      await openPiP();
-    }
-  };
-
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">設定</h1>
-      
+
       {/* 作業時BGM設定 */}
       <div className="space-y-2">
         <h2 className="text-lg font-medium">作業時のBGM</h2>
@@ -149,7 +137,6 @@ const SettingsForm: React.FC = () => {
       {/* タイマー設定 */}
       <div className="pt-4 border-t border-gray-700">
         <h2 className="text-lg font-medium mb-3">タイマー設定</h2>
-        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="workDuration" className="block text-sm font-medium text-gray-400 mb-1">
@@ -166,7 +153,6 @@ const SettingsForm: React.FC = () => {
               className="w-full py-2 px-3 bg-gray-700 rounded-md text-white border border-gray-600"
             />
           </div>
-          
           <div>
             <label htmlFor="breakDuration" className="block text-sm font-medium text-gray-400 mb-1">
               休憩時間 (分)
@@ -184,49 +170,6 @@ const SettingsForm: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Picture-in-Picture設定 */}
-      <div className="pt-4 border-t border-gray-700">
-        <h2 className="text-lg font-medium mb-3">Picture-in-Picture</h2>
-        
-        {!pipSupported ? (
-          <div className="text-yellow-400 p-3 bg-yellow-900 bg-opacity-25 rounded-md mb-4">
-            お使いのブラウザはPicture-in-Picture機能をサポートしていません。
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-300">
-                  タイマーを小さなウィンドウで表示できます
-                </p>
-                {pipOpen && (
-                  <p className="text-xs text-green-400 mt-1">
-                    Picture-in-Pictureウィンドウが開いています
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={handleTogglePiP}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  pipOpen
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
-                }`}
-              >
-                {pipOpen ? 'PinPを閉じる' : 'PinPで表示'}
-              </button>
-            </div>
-
-            {pipError && (
-              <div className="text-red-400 p-3 bg-red-900 bg-opacity-25 rounded-md text-sm">
-                エラー: {pipError}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
     </div>
   );
 };
