@@ -14,56 +14,56 @@ import SettingsForm from '../components/SettingsForm';
 import YouTubeEmbed from '../components/YouTubeEmbed';
 
 const PomodoroPage: React.FC = () => {
-  const { 
-    workUrl, 
-    breakUrl, 
-    workDuration, 
+  const {
+    workUrl,
+    breakUrl,
+    workDuration,
     breakDuration,
     workVideoProgress,
     breakVideoProgress,
     setWorkVideoProgress,
     setBreakVideoProgress
   } = useSettingsStore();
-  
-  const { 
-    mode, 
-    remaining, 
-    isRunning, 
-    start, 
+
+  const {
+    mode,
+    remaining,
+    isRunning,
+    start,
     tick,
     stop,
     setChimePlaying
   } = useTimerStore();
-  
+
   const { addRecord } = useRecordStore();
-  
+
   // Picture-in-Picture
   const { isSupported: pipSupported, isOpen: pipOpen, error: pipError, pipWindow, openPiP, closePiP } = usePictureInPicture();
-  
+
   // Timer session tracking
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
   const [totalWork, setTotalWork] = useState(0);
   const [totalBreak, setTotalBreak] = useState(0);
   const [lastTick, setLastTick] = useState<number | null>(null);
-  
+
   // Chime management
   const [hasPlayedWarningChime, setHasPlayedWarningChime] = useState(false);
-  
+
   // Settings sidebar control
   const [showSettings, setShowSettings] = useState(false);
-  
+
   // Error message state
   const [errorMessage, setErrorMessage] = useState('');
-  
+
   // Audio for timer start/end
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  
+
   // Audio for warning chime (3 seconds before end)
   const warningAudioRef = useRef<HTMLAudioElement | null>(null);
-  
+
   // YouTube player ref for controlling video
   const youtubePlayerRef = useRef<YouTubePlayerRef>(null);
-  
+
   // Helper function to stop chime audio completely
   const stopChimeAudio = useCallback(() => {
     // Stop start chime
@@ -72,16 +72,16 @@ const PomodoroPage: React.FC = () => {
       audioRef.current.currentTime = 0;
       audioRef.current.onended = null;
     }
-    
+
     // Stop warning chime
     if (warningAudioRef.current) {
       warningAudioRef.current.pause();
       warningAudioRef.current.currentTime = 0;
     }
-    
+
     setChimePlaying(false);
   }, [setChimePlaying]);
-  
+
   // Get video ID based on current mode
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
   const { videoId } = useYouTubeEmbed(currentUrl);
@@ -91,7 +91,7 @@ const PomodoroPage: React.FC = () => {
   // https://xxx.github.ioの場合、/assets/chime.wav を使用する
   const isGitHubPages = window.location.hostname.includes('github.io');
   const chimeUrl = isGitHubPages ? '/yopomo/assets/chime.wav' : '/src/assets/chime.wav';
-  
+
   // Function to save current video progress
   const saveVideoProgress = useCallback(() => {
     if (youtubePlayerRef.current && mode !== 'stopped') {
@@ -103,7 +103,7 @@ const PomodoroPage: React.FC = () => {
       }
     }
   }, [mode, setWorkVideoProgress, setBreakVideoProgress]);
-  
+
   // Get start time for current mode
   const getStartTime = () => {
     if (mode === 'work') {
@@ -113,7 +113,7 @@ const PomodoroPage: React.FC = () => {
     }
     return 0;
   };
-  
+
   // Setup the interval for timer ticking
   useInterval(
     () => {
@@ -129,10 +129,10 @@ const PomodoroPage: React.FC = () => {
         }
       }
       setLastTick(now);
-    }, 
+    },
     isRunning ? 1000 : null
   );
-  
+
   // Handle 3-second warning chime
   useEffect(() => {
     if (remaining === 3 && isRunning && !hasPlayedWarningChime) {
@@ -148,13 +148,13 @@ const PomodoroPage: React.FC = () => {
       }
     }
   }, [remaining, isRunning, hasPlayedWarningChime, chimeUrl]);
-  
+
   // Handle timer completion and auto-switch between work/break
   useEffect(() => {
     if (remaining === 0 && isRunning) {
       // Save current video progress before switching modes
       saveVideoProgress();
-      
+
       // Auto-switch to next phase (no chime)
       if (mode === 'work') {
         // Work finished -> Start break
@@ -163,7 +163,7 @@ const PomodoroPage: React.FC = () => {
         // Break finished -> Start work
         start('work', workDuration * 60, true);
       }
-      
+
       // Reset warning chime flag for next cycle
       setHasPlayedWarningChime(false);
       setLastTick(Date.now());
@@ -174,18 +174,18 @@ const PomodoroPage: React.FC = () => {
   useEffect(() => {
     setWorkVideoProgress(0);
   }, [workUrl, setWorkVideoProgress]);
-  
+
   useEffect(() => {
     setBreakVideoProgress(0);
   }, [breakUrl, setBreakVideoProgress]);
-  
+
   // Cleanup chime audio on unmount
   useEffect(() => {
     return () => {
       stopChimeAudio();
     };
   }, [stopChimeAudio]);
-  
+
   // Handle starting timer
   const handleStart = () => {
     // Check if YouTube URL is set
@@ -194,20 +194,20 @@ const PomodoroPage: React.FC = () => {
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
-    
+
     // Start with work mode
     start('work', workDuration * 60);
-    
+
     // Set chime playing state
     setChimePlaying(true);
-    
+
     // Play start sound
     if (!audioRef.current) {
       audioRef.current = new Audio(chimeUrl);
     } else {
       audioRef.current.currentTime = 0;
     }
-    
+
     audioRef.current.play();
     // When sound finishes, start the actual timer
     audioRef.current.onended = () => {
@@ -217,12 +217,12 @@ const PomodoroPage: React.FC = () => {
       setLastTick(Date.now());
     };
   };
-  
+
   // Handle pausing timer
   const handlePause = () => {
     // Stop chime audio if playing
     stopChimeAudio();
-    
+
     // Save current video progress before pausing
     saveVideoProgress();
     useTimerStore.getState().pause();
@@ -232,19 +232,19 @@ const PomodoroPage: React.FC = () => {
   const handleResume = () => {
     useTimerStore.getState().resume();
     setLastTick(Date.now());
-    
+
     // Seek to saved position when resuming
     if (youtubePlayerRef.current) {
       const startTime = getStartTime();
       youtubePlayerRef.current.seekTo(startTime);
     }
   };
-  
+
   // Handle manual stop with session recording
   const handleStop = () => {
     // Stop chime audio immediately
     stopChimeAudio();
-    
+
     // Record session if one is active
     if (sessionStart) {
       const now = new Date();
@@ -254,26 +254,26 @@ const PomodoroPage: React.FC = () => {
         totalWork: Math.round(totalWork),
         totalBreak: Math.round(totalBreak),
       });
-      
+
       // Reset session tracking
       setSessionStart(null);
       setTotalWork(0);
       setTotalBreak(0);
     }
-    
+
     // Reset video progress for both modes
     setWorkVideoProgress(0);
     setBreakVideoProgress(0);
-    
+
     // Stop the timer
     stop();
   };
-  
+
   // Switch between work/break modes
   const handleSwitchMode = () => {
     // Save current video progress before switching modes
     saveVideoProgress();
-    
+
     if (mode === 'work') {
       start('break', breakDuration * 60, true);
     } else {
@@ -283,17 +283,17 @@ const PomodoroPage: React.FC = () => {
     setHasPlayedWarningChime(false);
     setLastTick(Date.now());
   };
-  
+
   // Determine color class based on mode
   const colorClass = mode === 'work' ? 'text-red-500' : 'text-green-500';
-  
+
   // Toggle settings sidebar
   const toggleSettings = () => {
     setShowSettings(!showSettings);
   };
-  
 
-  
+
+
   return (
     <div className="relative min-h-screen">
       {/* Settings sidebar */}
@@ -301,7 +301,7 @@ const PomodoroPage: React.FC = () => {
         <div className="p-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">設定</h2>
-            <button 
+            <button
               onClick={toggleSettings}
               className="p-2 rounded-full hover:bg-gray-700"
             >
@@ -311,32 +311,32 @@ const PomodoroPage: React.FC = () => {
           <SettingsForm />
         </div>
       </div>
-      
+
       {/* Settings button */}
-      <button 
-        onClick={toggleSettings} 
+      <button
+        onClick={toggleSettings}
         className="fixed top-4 right-4 z-50 bg-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-700"
       >
         ⚙️
       </button>
-      
+
       {/* PiP button */}
       {pipSupported && (
-        <button 
+        <button
           onClick={pipOpen ? closePiP : () => openPiP()}
           className="fixed top-4 right-20 z-50 bg-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-700"
         >
           {pipOpen ? '🔗' : '📱'}
         </button>
       )}
-      
+
       {/* PiP error message */}
       {pipError && (
         <div className="fixed top-20 right-4 z-50 bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm backdrop-blur-sm">
           {pipError}
         </div>
       )}
-      
+
       {/* Page content with snap scroll */}
       <div className="h-screen snap-y snap-mandatory overflow-auto">
         {/* Timer section */}
@@ -350,31 +350,31 @@ const PomodoroPage: React.FC = () => {
                 startTime={getStartTime()}
               />
             )}
-            
+
             <div className="relative z-20 flex flex-col items-center justify-center glass rounded-xl shadow-2xl py-10 px-6">
               <h1 className="text-xl font-bold mb-4">
                 {mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'Pomodoro Timer'}
               </h1>
-              
-              <TimerCircle 
+
+              <TimerCircle
                 total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
                 remaining={remaining}
                 colorClass={colorClass}
               />
-              
-              <TimerControls 
+
+              <TimerControls
                 onStart={handleStart}
                 onPause={handlePause}
                 onResume={handleResume}
                 onStop={handleStop}
               />
-              
+
               {errorMessage && (
                 <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm text-center backdrop-blur-sm">
                   {errorMessage}
                 </div>
               )}
-              
+
               {mode !== 'stopped' && (
                 <button
                   onClick={handleSwitchMode}
@@ -384,7 +384,7 @@ const PomodoroPage: React.FC = () => {
                 </button>
               )}
             </div>
-            
+
             {/* Scroll indicator */}
             <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-gray-400">
               <span className="mb-2">記録を表示</span>
@@ -394,7 +394,7 @@ const PomodoroPage: React.FC = () => {
             </div>
           </div>
         </section>
-        
+
         {/* Record section */}
         <section className="snap-start min-h-screen flex flex-col items-center bg-gray-900 text-white py-16 px-4">
           <div className="w-full max-w-4xl">
@@ -403,7 +403,7 @@ const PomodoroPage: React.FC = () => {
           </div>
         </section>
       </div>
-      
+
       {/* PiP Portal */}
       {pipWindow && createPortal(
         (() => {
@@ -446,18 +446,18 @@ const PomodoroPage: React.FC = () => {
                   <div className="pip-youtube-overlay"></div>
                 </div>
               )}
-              
-               {/* タイマー表示 */}
-               <div className="pip-timer-content">
-                 <div className="pip-mode-text">{pipModeText}</div>
-                 <div className="relative inline-flex items-center justify-center mb-2">
-                   <TimerCircle
-                     total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
-                     remaining={remaining}
-                     colorClass={pipColorClass}
-                   />
-                 </div>
-               </div>
+
+              {/* タイマー表示 */}
+              <div className="pip-timer-content">
+                <div className="pip-mode-text">{pipModeText}</div>
+                <div className="relative inline-flex items-center justify-center mb-2">
+                  <TimerCircle
+                    total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
+                    remaining={remaining}
+                    colorClass={pipColorClass}
+                  />
+                </div>
+              </div>
             </div>
           );
         })(),

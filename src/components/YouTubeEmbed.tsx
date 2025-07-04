@@ -173,7 +173,7 @@ const YouTubeEmbed = forwardRef<YouTubeEmbedRef, YouTubeEmbedProps>(
     // Control video playback based on playing prop
     useEffect(() => {
       if (!playerRef.current) return;
-      
+
       if (playing) {
         playerRef.current.playVideo?.();
       } else {
