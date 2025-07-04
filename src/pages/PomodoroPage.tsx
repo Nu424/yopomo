@@ -424,7 +424,6 @@ const PomodoroPage: React.FC = () => {
           const pipCurrentUrl = mode === 'work' ? workUrl : breakUrl;
           const pipColorClass = mode === 'work' ? 'text-red-500' : 'text-green-500';
           const pipModeText = mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'ポモドーロ';
-          const pipShouldPlay = (mode === 'work' || mode === 'break') && !isChimePlaying;
 
           // Special display when chime is playing
           if (isChimePlaying) {
@@ -454,7 +453,7 @@ const PomodoroPage: React.FC = () => {
                   <YouTubeEmbed
                     ref={youtubePlayerRef}
                     url={pipCurrentUrl}
-                    playing={pipShouldPlay && pipHasInteracted}
+                    playing={isRunning && pipHasInteracted}
                     className="pip-youtube-iframe"
                     startTime={getStartTime()}
                   />
