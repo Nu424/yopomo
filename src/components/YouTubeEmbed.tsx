@@ -67,26 +67,47 @@ const YouTubeEmbed = forwardRef<YouTubeEmbedRef, YouTubeEmbedProps>(
     }));
 
     useEffect(() => {
-      // Load the YouTube API script if not already loaded
+      // Choose the correct document (main or PiP) based on where the container lives
+      const doc: Document = containerRef.current?.ownerDocument || document;
+      const win = doc.defaultView as (Window & typeof globalThis);
+
+      // Load the YouTube API script into the chosen document if needed
       if (!apiLoaded.current) {
-        const tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-        
-        window.onYouTubeIframeAPIReady = () => {
+        // Avoid duplicating the script inside the same document
+        if (doc.getElementById('youtube-iframe-api')) {
           apiLoaded.current = true;
-          if (videoId) {
-            initPlayer();
-          }
-        };
-      } else if (videoId) {
+        } else {
+          const tag = doc.createElement('script');
+          tag.id = 'youtube-iframe-api';
+          tag.src = 'https://www.youtube.com/iframe_api';
+
+          // Insert script before the first script tag or append to head
+          const firstScriptTag = doc.getElementsByTagName('script')[0];
+          (firstScriptTag?.parentNode || doc.head || doc.body).insertBefore(tag, firstScriptTag);
+
+          // Each document gets its own onYouTubeIframeAPIReady handler
+          win.onYouTubeIframeAPIReady = () => {
+            apiLoaded.current = true;
+            if (videoId) {
+              initPlayer();
+            }
+          };
+        }
+      }
+
+      // If API is ready already, just init (or update) the player
+      if (apiLoaded.current && videoId) {
         initPlayer();
       }
 
       function initPlayer() {
         if (!containerRef.current) return;
-        
+
+        // Always use the YT object that belongs to the same window as the container
+        const YTGlobal = (win as any).YT;
+
+        if (!YTGlobal) return; // API not yet ready
+
         if (playerRef.current) {
           // Player exists, load new video
           if (videoId) {
@@ -99,8 +120,8 @@ const YouTubeEmbed = forwardRef<YouTubeEmbedRef, YouTubeEmbedProps>(
             }
           }
         } else {
-          // Create new player
-          playerRef.current = new window.YT.Player(containerRef.current, {
+          // Create new player in the correct document/window context
+          playerRef.current = new YTGlobal.Player(containerRef.current, {
             videoId: videoId || '',
             playerVars: {
               autoplay: playing ? 1 : 0,
