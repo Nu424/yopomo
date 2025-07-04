@@ -64,6 +64,9 @@ const PomodoroPage: React.FC = () => {
   // YouTube player ref for controlling video
   const youtubePlayerRef = useRef<YouTubePlayerRef>(null);
 
+  // PiP user interaction tracking
+  const [pipHasInteracted, setPipHasInteracted] = useState(false);
+
   // Helper function to stop chime audio completely
   const stopChimeAudio = useCallback(() => {
     // Stop start chime
@@ -292,7 +295,17 @@ const PomodoroPage: React.FC = () => {
     setShowSettings(!showSettings);
   };
 
+  // Handle PiP interaction
+  const handlePipInteraction = () => {
+    setPipHasInteracted(true);
+  };
 
+  // Reset PiP interaction when PiP opens
+  useEffect(() => {
+    if (pipOpen) {
+      setPipHasInteracted(false);
+    }
+  }, [pipOpen]);
 
   return (
     <div className="relative min-h-screen">
@@ -434,16 +447,30 @@ const PomodoroPage: React.FC = () => {
           }
 
           return (
-            <div className="pip-container">
+            <div className="pip-container" onClick={handlePipInteraction}>
               {/* YouTube背景 */}
               {pipCurrentUrl && (
                 <div className="pip-youtube-background">
                   <YouTubeEmbed
+                    ref={youtubePlayerRef}
                     url={pipCurrentUrl}
-                    playing={pipShouldPlay}
+                    playing={pipShouldPlay && pipHasInteracted}
                     className="pip-youtube-iframe"
+                    startTime={getStartTime()}
                   />
                   <div className="pip-youtube-overlay"></div>
+                </div>
+              )}
+
+              {/* インタラクション促進メッセージ */}
+              {!pipHasInteracted && (
+                <div className="pip-interaction-message">
+                  <div className="pip-interaction-text">
+                    🎵 クリックして動画を再生
+                  </div>
+                  <div className="pip-interaction-subtext">
+                    ブラウザの制限により、一度クリックが必要です
+                  </div>
                 </div>
               )}
 

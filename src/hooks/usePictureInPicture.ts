@@ -115,6 +115,41 @@ const injectPiPStyles = (doc: Document) => {
     .-rotate-90 { --tw-rotate: -90deg; }
     .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
     .duration-1000 { transition-duration: 1000ms; }
+
+    .pip-interaction-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pip-interaction-message:hover {
+      background: rgba(0, 0, 0, 0.9);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    .pip-interaction-text {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    .pip-interaction-subtext {
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.4;
+    }
   `;
   doc.head.appendChild(styleElement);
 };
