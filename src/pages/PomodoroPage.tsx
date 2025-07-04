@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
@@ -11,7 +11,7 @@ import TimerControls from '../components/TimerControls';
 import YouTubeBackground, { type YouTubePlayerRef } from '../components/YouTubeBackground';
 import RecordList from '../components/RecordList';
 import SettingsForm from '../components/SettingsForm';
-import PiPTimer, { type PiPTimerState } from '../components/PiPTimer';
+import YouTubeEmbed from '../components/YouTubeEmbed';
 
 const PomodoroPage: React.FC = () => {
   const { 
@@ -85,17 +85,6 @@ const PomodoroPage: React.FC = () => {
   // Get video ID based on current mode
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
   const { videoId } = useYouTubeEmbed(currentUrl);
-  
-  // Create combined state for PiP timer
-  const pipTimerState: PiPTimerState = useMemo(() => ({
-    mode,
-    remaining,
-    isChimePlaying: useTimerStore.getState().isChimePlaying,
-    workDuration,
-    breakDuration,
-    workUrl,
-    breakUrl,
-  }), [mode, remaining, workDuration, breakDuration, workUrl, breakUrl]);
 
   // chime.wavのURLを、場合に応じて変更する
   // 開発中は、/src/assets/chime.wav を使用する
@@ -303,6 +292,8 @@ const PomodoroPage: React.FC = () => {
     setShowSettings(!showSettings);
   };
   
+
+  
   return (
     <div className="relative min-h-screen">
       {/* Settings sidebar */}
@@ -351,7 +342,7 @@ const PomodoroPage: React.FC = () => {
         {/* Timer section */}
         <section className="snap-start h-screen flex items-center justify-center bg-gray-900 text-white relative">
           <div className="relative w-full max-w-md px-4">
-            {videoId && (
+            {!pipOpen && videoId && (
               <YouTubeBackground
                 ref={youtubePlayerRef}
                 videoId={videoId}
@@ -415,7 +406,61 @@ const PomodoroPage: React.FC = () => {
       
       {/* PiP Portal */}
       {pipWindow && createPortal(
-        <PiPTimer timerState={pipTimerState} />,
+        (() => {
+          const { isChimePlaying } = useTimerStore.getState();
+          const pipCurrentUrl = mode === 'work' ? workUrl : breakUrl;
+          const pipColorClass = mode === 'work' ? 'text-red-500' : 'text-green-500';
+          const pipModeText = mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'ポモドーロ';
+          const pipShouldPlay = (mode === 'work' || mode === 'break') && !isChimePlaying;
+
+          // Special display when chime is playing
+          if (isChimePlaying) {
+            return (
+              <div className="pip-container">
+                <div className="pip-mode-text">{pipModeText}</div>
+                <div className="pip-timer-text">準備中... ♪</div>
+              </div>
+            );
+          }
+
+          // Show stopped state
+          if (mode === 'stopped') {
+            return (
+              <div className="pip-container">
+                <div className="pip-mode-text">ポモドーロタイマー</div>
+                <div className="pip-timer-text text-gray-400">停止中</div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="pip-container">
+              {/* YouTube背景 */}
+              {pipCurrentUrl && (
+                <div className="pip-youtube-background">
+                  <YouTubeEmbed
+                    url={pipCurrentUrl}
+                    playing={pipShouldPlay}
+                    className="pip-youtube-iframe"
+                  />
+                  <div className="pip-youtube-overlay"></div>
+                </div>
+              )}
+              
+               {/* タイマー表示 */}
+               <div className="pip-timer-content">
+                 <div className="pip-mode-text">{pipModeText}</div>
+                 <div className="relative inline-flex items-center justify-center mb-2">
+                   <TimerCircle
+                     total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
+                     remaining={remaining}
+                     colorClass={pipColorClass}
+                   />
+                 </div>
+               </div>
+            </div>
+          );
+        })(),
         pipWindow.document.body
       )}
     </div>
