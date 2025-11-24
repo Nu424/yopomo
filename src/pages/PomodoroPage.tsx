@@ -70,6 +70,10 @@ const PomodoroPage: React.FC = () => {
   // PiP user interaction tracking
   const [pipHasInteracted, setPipHasInteracted] = useState(false);
 
+  // Ad bypass state for temporarily disabling pointer events
+  const [adBypassActive, setAdBypassActive] = useState(false);
+  const adBypassTimerRef = useRef<number | null>(null);
+
   // Helper function to stop chime audio completely
   const stopChimeAudio = useCallback(() => {
     // Stop start chime
@@ -303,6 +307,27 @@ const PomodoroPage: React.FC = () => {
     }
   }, [pipOpen]);
 
+  // Ad bypass handler - temporarily disable pointer events for 3 seconds
+  const triggerAdBypass = useCallback(() => {
+    if (adBypassTimerRef.current) {
+      window.clearTimeout(adBypassTimerRef.current);
+    }
+    setAdBypassActive(true);
+    adBypassTimerRef.current = window.setTimeout(() => {
+      setAdBypassActive(false);
+      adBypassTimerRef.current = null;
+    }, 3000);
+  }, []);
+
+  // Cleanup ad bypass timer on unmount
+  useEffect(() => {
+    return () => {
+      if (adBypassTimerRef.current) {
+        window.clearTimeout(adBypassTimerRef.current);
+      }
+    };
+  }, []);
+
   // Common PiP button component
   const pipButton = pipSupported && (
     <button
@@ -312,6 +337,25 @@ const PomodoroPage: React.FC = () => {
     >
       {pipOpen ? '🔗' : '📱'}
     </button>
+  );
+
+  // Ad Skip button component
+  const adSkipButton = (!pipOpen && videoId) && (
+    <button
+      onClick={triggerAdBypass}
+      className="bg-gray-800/80 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-gray-700/80 transition-all border border-white/10"
+      title="広告スキップ補助（3秒間クリック可）"
+    >
+      ⏭️
+    </button>
+  );
+
+  // Action buttons for desktop TabBar
+  const actionButtons = (
+    <div className="flex gap-2">
+      {pipButton}
+      {adSkipButton}
+    </div>
   );
 
   return (
@@ -330,15 +374,18 @@ const PomodoroPage: React.FC = () => {
         <div 
           className={`absolute inset-0 transition-colors duration-500 ${
             activeTab === 'timer' ? 'bg-black/30' : 'bg-black/80'
-          }`}
+          } ${adBypassActive ? 'pointer-events-none opacity-50' : ''}`}
         />
       </div>
 
       {/* Main Content Area */}
-      <div className="relative z-10 h-screen flex flex-col">
+      <div className={`relative z-10 h-screen flex flex-col ${
+        adBypassActive ? 'pointer-events-none opacity-60' : ''
+      }`}>
         {/* Header Area for PiP button - Mobile Only */}
         <div className="absolute top-4 right-4 z-50 flex gap-2 md:hidden">
            {pipButton}
+           {adSkipButton}
         </div>
 
         {/* PiP error message */}
@@ -420,7 +467,7 @@ const PomodoroPage: React.FC = () => {
         <TabBar 
           currentTab={activeTab} 
           onTabChange={setActiveTab} 
-          action={pipButton} 
+          action={actionButtons} 
         />
       </div>
 
