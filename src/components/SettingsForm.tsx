@@ -34,8 +34,6 @@ const SettingsForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">設定</h1>
-
       {/* 作業時BGM設定 */}
       <div className="space-y-2">
         <h2 className="text-lg font-medium">作業時のBGM</h2>

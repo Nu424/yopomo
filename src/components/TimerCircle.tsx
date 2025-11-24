@@ -19,29 +19,41 @@ const TimerCircle: React.FC<TimerCircleProps> = ({ total, remaining, colorClass 
   const displayTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center filter drop-shadow-xl">
       <div className="relative inline-flex items-center justify-center">
         <svg
           height={radius * 2}
           width={radius * 2}
           className="transform -rotate-90"
         >
+          {/* Background circle */}
+          <circle
+            stroke="currentColor"
+            fill="transparent"
+            strokeWidth={strokeWidth}
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+            className="text-gray-700/50"
+          />
+          {/* Progress circle */}
           <circle
             stroke="currentColor"
             fill="transparent"
             strokeWidth={strokeWidth}
             strokeDasharray={`${circumference} ${circumference}`}
             style={{ strokeDashoffset }}
+            strokeLinecap="round"
             r={normalizedRadius}
             cx={radius}
             cy={radius}
             className={`${colorClass} transition-all duration-1000`}
           />
         </svg>
-        <div className="absolute text-4xl font-bold">{displayTime}</div>
+        <div className="absolute text-5xl font-bold tracking-wider font-mono drop-shadow-md">{displayTime}</div>
       </div>
     </div>
   );
 };
 
-export default TimerCircle; 
+export default TimerCircle;

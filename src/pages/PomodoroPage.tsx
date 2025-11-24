@@ -12,6 +12,9 @@ import YouTubeBackground, { type YouTubePlayerRef } from '../components/YouTubeB
 import RecordList from '../components/RecordList';
 import SettingsForm from '../components/SettingsForm';
 import YouTubeEmbed from '../components/YouTubeEmbed';
+import TabBar from '../components/TabBar';
+
+type TabType = 'timer' | 'record' | 'settings';
 
 const PomodoroPage: React.FC = () => {
   const {
@@ -37,6 +40,9 @@ const PomodoroPage: React.FC = () => {
 
   const { addRecord } = useRecordStore();
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabType>('timer');
+
   // Picture-in-Picture
   const { isSupported: pipSupported, isOpen: pipOpen, error: pipError, pipWindow, openPiP, closePiP } = usePictureInPicture();
 
@@ -48,9 +54,6 @@ const PomodoroPage: React.FC = () => {
 
   // Chime management
   const [hasPlayedWarningChime, setHasPlayedWarningChime] = useState(false);
-
-  // Settings sidebar control
-  const [showSettings, setShowSettings] = useState(false);
 
   // Error message state
   const [errorMessage, setErrorMessage] = useState('');
@@ -90,8 +93,6 @@ const PomodoroPage: React.FC = () => {
   const { videoId } = useYouTubeEmbed(currentUrl);
 
   // chime.wavのURLを、場合に応じて変更する
-  // 開発中は、/src/assets/chime.wav を使用する
-  // https://xxx.github.ioの場合、/assets/chime.wav を使用する
   const isGitHubPages = window.location.hostname.includes('github.io');
   const chimeUrl = isGitHubPages ? '/yopomo/assets/chime.wav' : '/src/assets/chime.wav';
 
@@ -290,11 +291,6 @@ const PomodoroPage: React.FC = () => {
   // Determine color class based on mode
   const colorClass = mode === 'work' ? 'text-red-500' : 'text-green-500';
 
-  // Toggle settings sidebar
-  const toggleSettings = () => {
-    setShowSettings(!showSettings);
-  };
-
   // Handle PiP interaction
   const handlePipInteraction = () => {
     setPipHasInteracted(true);
@@ -307,114 +303,125 @@ const PomodoroPage: React.FC = () => {
     }
   }, [pipOpen]);
 
+  // Common PiP button component
+  const pipButton = pipSupported && (
+    <button
+      onClick={pipOpen ? closePiP : () => openPiP()}
+      className="bg-gray-800/80 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-gray-700/80 transition-all border border-white/10"
+      title={pipOpen ? "PiPを終了" : "PiPモード"}
+    >
+      {pipOpen ? '🔗' : '📱'}
+    </button>
+  );
+
   return (
-    <div className="relative min-h-screen">
-      {/* Settings sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-full md:w-80 bg-gray-800 z-40 transition-transform duration-300 overflow-auto ${showSettings ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">設定</h2>
-            <button
-              onClick={toggleSettings}
-              className="p-2 rounded-full hover:bg-gray-700"
-            >
-              ✕
-            </button>
-          </div>
-          <SettingsForm />
-        </div>
+    <div className="relative min-h-screen bg-gray-900 text-white overflow-hidden">
+      {/* Background Video Layer */}
+      <div className="fixed inset-0 z-0">
+        {!pipOpen && videoId && (
+          <YouTubeBackground
+            ref={youtubePlayerRef}
+            videoId={videoId}
+            playing={isRunning}
+            startTime={getStartTime()}
+          />
+        )}
+        {/* Overlay - Darker for non-timer tabs */}
+        <div 
+          className={`absolute inset-0 transition-colors duration-500 ${
+            activeTab === 'timer' ? 'bg-black/30' : 'bg-black/80'
+          }`}
+        />
       </div>
 
-      {/* Settings button */}
-      <button
-        onClick={toggleSettings}
-        className="fixed top-4 right-4 z-50 bg-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-700"
-      >
-        ⚙️
-      </button>
-
-      {/* PiP button */}
-      {pipSupported && (
-        <button
-          onClick={pipOpen ? closePiP : () => openPiP()}
-          className="fixed top-4 right-20 z-50 bg-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-700"
-        >
-          {pipOpen ? '🔗' : '📱'}
-        </button>
-      )}
-
-      {/* PiP error message */}
-      {pipError && (
-        <div className="fixed top-20 right-4 z-50 bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm backdrop-blur-sm">
-          {pipError}
+      {/* Main Content Area */}
+      <div className="relative z-10 h-screen flex flex-col">
+        {/* Header Area for PiP button - Mobile Only */}
+        <div className="absolute top-4 right-4 z-50 flex gap-2 md:hidden">
+           {pipButton}
         </div>
-      )}
 
-      {/* Page content with snap scroll */}
-      <div className="h-screen snap-y snap-mandatory overflow-auto">
-        {/* Timer section */}
-        <section className="snap-start h-screen flex items-center justify-center bg-gray-900 text-white relative">
-          <div className="relative w-full max-w-md px-4">
-            {!pipOpen && videoId && (
-              <YouTubeBackground
-                ref={youtubePlayerRef}
-                videoId={videoId}
-                playing={isRunning}
-                startTime={getStartTime()}
-              />
+        {/* PiP error message */}
+        {pipError && (
+          <div className="fixed top-20 right-4 z-50 bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm backdrop-blur-sm">
+            {pipError}
+          </div>
+        )}
+
+        {/* Content Container - Padded for TabBar */}
+        <div className="flex-1 overflow-auto pb-20 md:pt-20 md:pb-0">
+          <div className="max-w-screen-md mx-auto h-full px-4">
+            
+            {/* Timer View */}
+            {activeTab === 'timer' && (
+              <div className="h-full flex flex-col items-center justify-center">
+                 <div className="w-full max-w-md flex flex-col items-center justify-center glass rounded-3xl shadow-2xl py-12 px-8 border border-white/10">
+                  <h1 className="text-2xl font-bold mb-8 tracking-wide drop-shadow-lg">
+                    {mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'Pomodoro Timer'}
+                  </h1>
+
+                  <div className="mb-8">
+                    <TimerCircle
+                      total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
+                      remaining={remaining}
+                      colorClass={colorClass}
+                    />
+                  </div>
+
+                  <TimerControls
+                    onStart={handleStart}
+                    onPause={handlePause}
+                    onResume={handleResume}
+                    onStop={handleStop}
+                  />
+
+                  {errorMessage && (
+                    <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm text-center backdrop-blur-sm animate-pulse">
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  {mode !== 'stopped' && (
+                    <button
+                      onClick={handleSwitchMode}
+                      className="mt-6 text-sm text-gray-300 hover:text-white transition-colors underline decoration-dotted underline-offset-4"
+                    >
+                      {mode === 'work' ? '休憩モードに切替' : '作業モードに切替'}
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
 
-            <div className="relative z-20 flex flex-col items-center justify-center glass rounded-xl shadow-2xl py-10 px-6">
-              <h1 className="text-xl font-bold mb-4">
-                {mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'Pomodoro Timer'}
-              </h1>
-
-              <TimerCircle
-                total={mode === 'work' ? workDuration * 60 : breakDuration * 60}
-                remaining={remaining}
-                colorClass={colorClass}
-              />
-
-              <TimerControls
-                onStart={handleStart}
-                onPause={handlePause}
-                onResume={handleResume}
-                onStop={handleStop}
-              />
-
-              {errorMessage && (
-                <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm text-center backdrop-blur-sm">
-                  {errorMessage}
+            {/* Record View */}
+            {activeTab === 'record' && (
+              <div className="py-8 min-h-full">
+                <h2 className="text-2xl font-bold mb-8 text-center sticky top-0 z-20 py-4 bg-transparent backdrop-blur-md rounded-xl">ポモドーロ記録</h2>
+                <div className="glass rounded-xl p-4 md:p-6 shadow-xl">
+                  <RecordList />
                 </div>
-              )}
+              </div>
+            )}
 
-              {mode !== 'stopped' && (
-                <button
-                  onClick={handleSwitchMode}
-                  className="mt-4 text-sm text-gray-300 hover:text-white"
-                >
-                  {mode === 'work' ? '休憩モードに切替' : '作業モードに切替'}
-                </button>
-              )}
-            </div>
+            {/* Settings View */}
+            {activeTab === 'settings' && (
+              <div className="py-8 min-h-full">
+                <h2 className="text-2xl font-bold mb-8 text-center sticky top-0 z-20 py-4 bg-transparent backdrop-blur-md rounded-xl">設定</h2>
+                <div className="glass rounded-xl p-6 shadow-xl max-w-2xl mx-auto">
+                   <SettingsForm />
+                </div>
+              </div>
+            )}
 
-            {/* Scroll indicator */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-gray-400">
-              <span className="mb-2">記録を表示</span>
-              <svg className="animate-bounce w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
           </div>
-        </section>
+        </div>
 
-        {/* Record section */}
-        <section className="snap-start min-h-screen flex flex-col items-center bg-gray-900 text-white py-16 px-4">
-          <div className="w-full max-w-4xl">
-            <h2 className="text-2xl font-bold mb-8 text-center">ポモドーロ記録</h2>
-            <RecordList />
-          </div>
-        </section>
+        {/* Tab Navigation - Pass PiP button as action for PC */}
+        <TabBar 
+          currentTab={activeTab} 
+          onTabChange={setActiveTab} 
+          action={pipButton} 
+        />
       </div>
 
       {/* PiP Portal */}
@@ -493,4 +500,4 @@ const PomodoroPage: React.FC = () => {
   );
 };
 
-export default PomodoroPage; 
+export default PomodoroPage;
