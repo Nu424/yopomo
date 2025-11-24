@@ -13,6 +13,7 @@ import RecordList from '../components/RecordList';
 import SettingsForm from '../components/SettingsForm';
 import YouTubeEmbed from '../components/YouTubeEmbed';
 import TabBar from '../components/TabBar';
+import chimeSound from '../assets/chime.wav';
 
 type TabType = 'timer' | 'record' | 'settings';
 
@@ -96,10 +97,6 @@ const PomodoroPage: React.FC = () => {
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
   const { videoId } = useYouTubeEmbed(currentUrl);
 
-  // chime.wavのURLを、場合に応じて変更する
-  const isGitHubPages = window.location.hostname.includes('github.io');
-  const chimeUrl = isGitHubPages ? '/yopomo/assets/chime.wav' : '/src/assets/chime.wav';
-
   // 現在の動画の進捗を保存する関数
   const saveVideoProgress = useCallback(() => {
     if (youtubePlayerRef.current && mode !== 'stopped') {
@@ -147,7 +144,7 @@ const PomodoroPage: React.FC = () => {
       const { isChimePlaying } = useTimerStore.getState();
       if (!isChimePlaying) {
         if (!warningAudioRef.current) {
-          warningAudioRef.current = new Audio(chimeUrl);
+          warningAudioRef.current = new Audio(chimeSound);
         } else {
           warningAudioRef.current.currentTime = 0;
         }
@@ -155,7 +152,7 @@ const PomodoroPage: React.FC = () => {
         setHasPlayedWarningChime(true);
       }
     }
-  }, [remaining, isRunning, hasPlayedWarningChime, chimeUrl]);
+  }, [remaining, isRunning, hasPlayedWarningChime]);
 
   // タイマー完了と作業/休憩の自動切り替えを処理
   useEffect(() => {
@@ -211,7 +208,7 @@ const PomodoroPage: React.FC = () => {
 
     // 開始音を再生
     if (!audioRef.current) {
-      audioRef.current = new Audio(chimeUrl);
+      audioRef.current = new Audio(chimeSound);
     } else {
       audioRef.current.currentTime = 0;
     }
