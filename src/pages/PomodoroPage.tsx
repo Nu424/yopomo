@@ -40,50 +40,50 @@ const PomodoroPage: React.FC = () => {
 
   const { addRecord } = useRecordStore();
 
-  // Tab state
+  // タブ状態
   const [activeTab, setActiveTab] = useState<TabType>('timer');
 
   // Picture-in-Picture
   const { isSupported: pipSupported, isOpen: pipOpen, error: pipError, pipWindow, openPiP, closePiP } = usePictureInPicture();
 
-  // Timer session tracking
+  // タイマーセッション追跡
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
   const [totalWork, setTotalWork] = useState(0);
   const [totalBreak, setTotalBreak] = useState(0);
   const [lastTick, setLastTick] = useState<number | null>(null);
 
-  // Chime management
+  // チャイム管理
   const [hasPlayedWarningChime, setHasPlayedWarningChime] = useState(false);
 
-  // Error message state
+  // エラーメッセージ状態
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Audio for timer start/end
+  // タイマー開始/終了用の音声
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Audio for warning chime (3 seconds before end)
+  // 警告チャイム用の音声（終了3秒前）
   const warningAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // YouTube player ref for controlling video
+  // 動画制御用のYouTubeプレイヤー参照
   const youtubePlayerRef = useRef<YouTubePlayerRef>(null);
 
-  // PiP user interaction tracking
+  // PiPユーザーインタラクション追跡
   const [pipHasInteracted, setPipHasInteracted] = useState(false);
 
-  // Ad bypass state for temporarily disabling pointer events
+  // 広告バイパス状態（一時的にポインターイベントを無効化）
   const [adBypassActive, setAdBypassActive] = useState(false);
   const adBypassTimerRef = useRef<number | null>(null);
 
-  // Helper function to stop chime audio completely
+  // チャイム音声を完全に停止するヘルパー関数
   const stopChimeAudio = useCallback(() => {
-    // Stop start chime
+    // 開始チャイムを停止
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       audioRef.current.onended = null;
     }
 
-    // Stop warning chime
+    // 警告チャイムを停止
     if (warningAudioRef.current) {
       warningAudioRef.current.pause();
       warningAudioRef.current.currentTime = 0;
@@ -92,7 +92,7 @@ const PomodoroPage: React.FC = () => {
     setChimePlaying(false);
   }, [setChimePlaying]);
 
-  // Get video ID based on current mode
+  // 現在のモードに基づいて動画IDを取得
   const currentUrl = mode === 'work' ? workUrl : breakUrl;
   const { videoId } = useYouTubeEmbed(currentUrl);
 
@@ -100,7 +100,7 @@ const PomodoroPage: React.FC = () => {
   const isGitHubPages = window.location.hostname.includes('github.io');
   const chimeUrl = isGitHubPages ? '/yopomo/assets/chime.wav' : '/src/assets/chime.wav';
 
-  // Function to save current video progress
+  // 現在の動画の進捗を保存する関数
   const saveVideoProgress = useCallback(() => {
     if (youtubePlayerRef.current && mode !== 'stopped') {
       const currentTime = youtubePlayerRef.current.getCurrentTime();
@@ -112,7 +112,7 @@ const PomodoroPage: React.FC = () => {
     }
   }, [mode, setWorkVideoProgress, setBreakVideoProgress]);
 
-  // Get start time for current mode
+  // 現在のモードの開始時間を取得
   const getStartTime = () => {
     if (mode === 'work') {
       return workVideoProgress;
@@ -122,11 +122,11 @@ const PomodoroPage: React.FC = () => {
     return 0;
   };
 
-  // Setup the interval for timer ticking
+  // タイマーのティック用のインターバルを設定
   useInterval(
     () => {
       tick();
-      // Track time spent in each mode
+      // 各モードで費やした時間を追跡
       const now = Date.now();
       if (lastTick && isRunning) {
         const diff = (now - lastTick) / 1000;
@@ -141,7 +141,7 @@ const PomodoroPage: React.FC = () => {
     isRunning ? 1000 : null
   );
 
-  // Handle 3-second warning chime
+  // 3秒前の警告チャイムを処理
   useEffect(() => {
     if (remaining === 3 && isRunning && !hasPlayedWarningChime) {
       const { isChimePlaying } = useTimerStore.getState();
@@ -157,28 +157,28 @@ const PomodoroPage: React.FC = () => {
     }
   }, [remaining, isRunning, hasPlayedWarningChime, chimeUrl]);
 
-  // Handle timer completion and auto-switch between work/break
+  // タイマー完了と作業/休憩の自動切り替えを処理
   useEffect(() => {
     if (remaining === 0 && isRunning) {
-      // Save current video progress before switching modes
+      // モード切り替え前に現在の動画の進捗を保存
       saveVideoProgress();
 
-      // Auto-switch to next phase (no chime)
+      // 次のフェーズに自動切り替え（チャイムなし）
       if (mode === 'work') {
-        // Work finished -> Start break
+        // 作業終了 -> 休憩開始
         start('break', breakDuration * 60, true);
       } else if (mode === 'break') {
-        // Break finished -> Start work
+        // 休憩終了 -> 作業開始
         start('work', workDuration * 60, true);
       }
 
-      // Reset warning chime flag for next cycle
+      // 次のサイクル用に警告チャイムフラグをリセット
       setHasPlayedWarningChime(false);
       setLastTick(Date.now());
     }
   }, [remaining, isRunning, mode, workDuration, breakDuration, saveVideoProgress, start]);
 
-  // Reset video progress when URL changes
+  // URL変更時に動画の進捗をリセット
   useEffect(() => {
     setWorkVideoProgress(0);
   }, [workUrl, setWorkVideoProgress]);
@@ -187,29 +187,29 @@ const PomodoroPage: React.FC = () => {
     setBreakVideoProgress(0);
   }, [breakUrl, setBreakVideoProgress]);
 
-  // Cleanup chime audio on unmount
+  // アンマウント時にチャイム音声をクリーンアップ
   useEffect(() => {
     return () => {
       stopChimeAudio();
     };
   }, [stopChimeAudio]);
 
-  // Handle starting timer
+  // タイマー開始を処理
   const handleStart = () => {
-    // Check if YouTube URL is set
+    // YouTube URLが設定されているか確認
     if (!workUrl.trim()) {
       setErrorMessage('作業用のYouTube動画URLを設定してください');
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
 
-    // Start with work mode
+    // 作業モードで開始
     start('work', workDuration * 60);
 
-    // Set chime playing state
+    // チャイム再生状態を設定
     setChimePlaying(true);
 
-    // Play start sound
+    // 開始音を再生
     if (!audioRef.current) {
       audioRef.current = new Audio(chimeUrl);
     } else {
@@ -217,7 +217,7 @@ const PomodoroPage: React.FC = () => {
     }
 
     audioRef.current.play();
-    // When sound finishes, start the actual timer
+    // 音が終了したら、実際のタイマーを開始
     audioRef.current.onended = () => {
       setChimePlaying(false);
       useTimerStore.getState().resume();
@@ -226,34 +226,34 @@ const PomodoroPage: React.FC = () => {
     };
   };
 
-  // Handle pausing timer
+  // タイマー一時停止を処理
   const handlePause = () => {
-    // Stop chime audio if playing
+    // チャイム音声が再生中の場合は停止
     stopChimeAudio();
 
-    // Save current video progress before pausing
+    // 一時停止前に現在の動画の進捗を保存
     saveVideoProgress();
     useTimerStore.getState().pause();
   };
 
-  // Handle resuming from pause (no chime)
+  // 一時停止からの再開を処理（チャイムなし）
   const handleResume = () => {
     useTimerStore.getState().resume();
     setLastTick(Date.now());
 
-    // Seek to saved position when resuming
+    // 再開時に保存された位置にシーク
     if (youtubePlayerRef.current) {
       const startTime = getStartTime();
       youtubePlayerRef.current.seekTo(startTime);
     }
   };
 
-  // Handle manual stop with session recording
+  // セッション記録付きの手動停止を処理
   const handleStop = () => {
-    // Stop chime audio immediately
+    // チャイム音声を即座に停止
     stopChimeAudio();
 
-    // Record session if one is active
+    // アクティブなセッションがあれば記録
     if (sessionStart) {
       const now = new Date();
       addRecord({
@@ -263,23 +263,23 @@ const PomodoroPage: React.FC = () => {
         totalBreak: Math.round(totalBreak),
       });
 
-      // Reset session tracking
+      // セッション追跡をリセット
       setSessionStart(null);
       setTotalWork(0);
       setTotalBreak(0);
     }
 
-    // Reset video progress for both modes
+    // 両モードの動画の進捗をリセット
     setWorkVideoProgress(0);
     setBreakVideoProgress(0);
 
-    // Stop the timer
+    // タイマーを停止
     stop();
   };
 
-  // Switch between work/break modes
+  // 作業/休憩モードの切り替え
   const handleSwitchMode = () => {
-    // Save current video progress before switching modes
+    // モード切り替え前に現在の動画の進捗を保存
     saveVideoProgress();
 
     if (mode === 'work') {
@@ -287,27 +287,27 @@ const PomodoroPage: React.FC = () => {
     } else {
       start('work', workDuration * 60, true);
     }
-    // Reset warning chime flag for new mode
+    // 新しいモード用に警告チャイムフラグをリセット
     setHasPlayedWarningChime(false);
     setLastTick(Date.now());
   };
 
-  // Determine color class based on mode
+  // モードに基づいてカラークラスを決定
   const colorClass = mode === 'work' ? 'text-red-500' : 'text-green-500';
 
-  // Handle PiP interaction
+  // PiPインタラクションを処理
   const handlePipInteraction = () => {
     setPipHasInteracted(true);
   };
 
-  // Reset PiP interaction when PiP opens
+  // PiPが開いたときにPiPインタラクションをリセット
   useEffect(() => {
     if (pipOpen) {
       setPipHasInteracted(false);
     }
   }, [pipOpen]);
 
-  // Ad bypass handler - temporarily disable pointer events for 3 seconds
+  // 広告バイパスハンドラ - 3秒間ポインターイベントを一時的に無効化
   const triggerAdBypass = useCallback(() => {
     if (adBypassTimerRef.current) {
       window.clearTimeout(adBypassTimerRef.current);
@@ -319,7 +319,7 @@ const PomodoroPage: React.FC = () => {
     }, 3000);
   }, []);
 
-  // Cleanup ad bypass timer on unmount
+  // アンマウント時に広告バイパスタイマーをクリーンアップ
   useEffect(() => {
     return () => {
       if (adBypassTimerRef.current) {
@@ -328,7 +328,7 @@ const PomodoroPage: React.FC = () => {
     };
   }, []);
 
-  // Common PiP button component
+  // 共通のPiPボタンコンポーネント
   const pipButton = pipSupported && (
     <button
       onClick={pipOpen ? closePiP : () => openPiP()}
@@ -339,7 +339,7 @@ const PomodoroPage: React.FC = () => {
     </button>
   );
 
-  // Ad Skip button component
+  // Ad Skipボタンコンポーネント
   const adSkipButton = (!pipOpen && videoId) && (
     <button
       onClick={triggerAdBypass}
@@ -350,7 +350,7 @@ const PomodoroPage: React.FC = () => {
     </button>
   );
 
-  // Action buttons for desktop TabBar
+  // デスクトップTabBar用のアクションボタン
   const actionButtons = (
     <div className="flex gap-2">
       {pipButton}
@@ -360,7 +360,7 @@ const PomodoroPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-gray-900 text-white overflow-hidden">
-      {/* Background Video Layer */}
+      {/* 背景動画レイヤー */}
       <div className="fixed inset-0 z-0">
         {!pipOpen && videoId && (
           <YouTubeBackground
@@ -370,39 +370,37 @@ const PomodoroPage: React.FC = () => {
             startTime={getStartTime()}
           />
         )}
-        {/* Overlay - Darker for non-timer tabs */}
-        <div 
-          className={`absolute inset-0 transition-colors duration-500 ${
-            activeTab === 'timer' ? 'bg-black/30' : 'bg-black/80'
-          } ${adBypassActive ? 'pointer-events-none opacity-50' : ''}`}
+        {/* オーバーレイ - タイマー以外のタブではより暗く */}
+        <div
+          className={`absolute inset-0 transition-colors duration-500 ${activeTab === 'timer' ? 'bg-black/30' : 'bg-black/80'
+            } ${adBypassActive ? 'pointer-events-none opacity-50' : ''}`}
         />
       </div>
 
-      {/* Main Content Area */}
-      <div className={`relative z-10 h-screen flex flex-col ${
-        adBypassActive ? 'pointer-events-none opacity-60' : ''
-      }`}>
-        {/* Header Area for PiP button - Mobile Only */}
+      {/* メインコンテンツエリア */}
+      <div className={`relative z-10 h-screen flex flex-col ${adBypassActive ? 'pointer-events-none opacity-60' : ''
+        }`}>
+        {/* PiPボタン用のヘッダーエリア - モバイルのみ */}
         <div className="absolute top-4 right-4 z-50 flex gap-2 md:hidden">
-           {pipButton}
-           {adSkipButton}
+          {pipButton}
+          {adSkipButton}
         </div>
 
-        {/* PiP error message */}
+        {/* PiPエラーメッセージ */}
         {pipError && (
           <div className="fixed top-20 right-4 z-50 bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm backdrop-blur-sm">
             {pipError}
           </div>
         )}
 
-        {/* Content Container - Padded for TabBar */}
+        {/* コンテンツコンテナ - TabBar用にパディング */}
         <div className="flex-1 overflow-auto pb-20 md:pt-20 md:pb-0">
           <div className="max-w-screen-md mx-auto h-full px-4">
-            
-            {/* Timer View */}
+
+            {/* タイマービュー */}
             {activeTab === 'timer' && (
               <div className="h-full flex flex-col items-center justify-center">
-                 <div className="w-full max-w-md flex flex-col items-center justify-center glass rounded-3xl shadow-2xl py-12 px-8 border border-white/10">
+                <div className="w-full max-w-md flex flex-col items-center justify-center glass rounded-3xl shadow-2xl py-12 px-8 border border-white/10">
                   <h1 className="text-2xl font-bold mb-8 tracking-wide drop-shadow-lg">
                     {mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'Pomodoro Timer'}
                   </h1>
@@ -440,7 +438,7 @@ const PomodoroPage: React.FC = () => {
               </div>
             )}
 
-            {/* Record View */}
+            {/* 記録ビュー */}
             {activeTab === 'record' && (
               <div className="py-8 min-h-full">
                 <h2 className="text-2xl font-bold mb-8 text-center sticky top-0 z-20 py-4 bg-transparent backdrop-blur-md rounded-xl">ポモドーロ記録</h2>
@@ -450,12 +448,12 @@ const PomodoroPage: React.FC = () => {
               </div>
             )}
 
-            {/* Settings View */}
+            {/* 設定ビュー */}
             {activeTab === 'settings' && (
               <div className="py-8 min-h-full">
                 <h2 className="text-2xl font-bold mb-8 text-center sticky top-0 z-20 py-4 bg-transparent backdrop-blur-md rounded-xl">設定</h2>
                 <div className="glass rounded-xl p-6 shadow-xl max-w-2xl mx-auto">
-                   <SettingsForm />
+                  <SettingsForm />
                 </div>
               </div>
             )}
@@ -463,15 +461,15 @@ const PomodoroPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Navigation - Pass PiP button as action for PC */}
-        <TabBar 
-          currentTab={activeTab} 
-          onTabChange={setActiveTab} 
-          action={actionButtons} 
+        {/* タブナビゲーション - PC用にPiPボタンをアクションとして渡す */}
+        <TabBar
+          currentTab={activeTab}
+          onTabChange={setActiveTab}
+          action={actionButtons}
         />
       </div>
 
-      {/* PiP Portal */}
+      {/* PiPポータル */}
       {pipWindow && createPortal(
         (() => {
           const { isChimePlaying } = useTimerStore.getState();
@@ -479,7 +477,7 @@ const PomodoroPage: React.FC = () => {
           const pipColorClass = mode === 'work' ? 'text-red-500' : 'text-green-500';
           const pipModeText = mode === 'work' ? '作業中' : mode === 'break' ? '休憩中' : 'ポモドーロ';
 
-          // Special display when chime is playing
+          // チャイム再生中の特別表示
           if (isChimePlaying) {
             return (
               <div className="pip-container">
@@ -489,7 +487,7 @@ const PomodoroPage: React.FC = () => {
             );
           }
 
-          // Show stopped state
+          // 停止状態を表示
           if (mode === 'stopped') {
             return (
               <div className="pip-container">
