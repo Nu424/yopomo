@@ -20,6 +20,7 @@ interface RecordState {
   records: PomodoroRecord[];
   addRecord: (rec: Omit<PomodoroRecord,'id'>) => void;
   updateNote: (id: string, note: string) => void;
+  deleteRecord: (id: string) => void;
   clearAll: () => void;
   exportToCsv: () => void;
 }
@@ -40,6 +41,10 @@ export const useRecordStore = create<RecordState>()(
           records: s.records.map((r) =>
             r.id === id ? { ...r, note } : r
           ),
+        })),
+      deleteRecord: (id) =>
+        set((s) => ({
+          records: s.records.filter((r) => r.id !== id),
         })),
       clearAll: () => set({ records: [] }),
       exportToCsv: () => {

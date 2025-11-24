@@ -3,7 +3,7 @@ import { useRecordStore } from '../stores/recordStore';
 import type { PomodoroRecord } from '../stores/recordStore';
 
 const RecordList: React.FC = () => {
-  const { records, updateNote, clearAll, exportToCsv } = useRecordStore();
+  const { records, updateNote, deleteRecord, clearAll, exportToCsv } = useRecordStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNote, setEditNote] = useState<string>('');
 
@@ -81,7 +81,19 @@ const RecordList: React.FC = () => {
                 </div>
                 
                 <div className="mt-3">
-                  <div className="text-xs text-gray-400 mb-1">メモ</div>
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="text-xs text-gray-400">メモ</div>
+                    <button
+                      onClick={() => {
+                        if (confirm('この記録を削除しますか？')) {
+                          deleteRecord(record.id);
+                        }
+                      }}
+                      className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                    >
+                      削除
+                    </button>
+                  </div>
                   {editingId === record.id ? (
                     <div className="mt-1">
                       <textarea 
@@ -128,6 +140,7 @@ const RecordList: React.FC = () => {
                   <th className="px-4 py-2">作業時間</th>
                   <th className="px-4 py-2">休憩時間</th>
                   <th className="px-4 py-2">メモ</th>
+                  <th className="px-4 py-2">操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,6 +182,18 @@ const RecordList: React.FC = () => {
                           {record.note || <span className="text-gray-500">(メモを追加)</span>}
                         </div>
                       )}
+                    </td>
+                    <td className="px-4 py-2">
+                      <button
+                        onClick={() => {
+                          if (confirm('この記録を削除しますか？')) {
+                            deleteRecord(record.id);
+                          }
+                        }}
+                        className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                      >
+                        削除
+                      </button>
                     </td>
                   </tr>
                 ))}
